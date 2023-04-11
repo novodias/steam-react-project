@@ -1,0 +1,32 @@
+.f-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.f-row > div {
+    flex-grow: 1;
+}
+
+.f-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.information-container {
+    color: lightgray;
+}
+
+.information-container div:first-child {
+    margin-top: 0;
+}
+
+.information-container span {
+    min-width: 175px;
+}
+
+.btn-right {
+    float: right;
+    padding: 10px;
+    font-size: 16px;
+    line-height: normal;
+}

@@ -1,9 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# font
+Roboto.zip
+
 # dependencies
 /node_modules
 /.pnp
 .pnp.js
+*/**/node_modules
+
+# ignore json examples
+api/playerBansExample.json
+api/playerSummariesExample.json
+api/recentlyPlayedGamesExample.json
 
 # testing
 /coverage

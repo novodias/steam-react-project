@@ -1,0 +1,19 @@
+.player-bans-wrapper span {
+    min-width: 200px;
+}
+
+.bg-red {
+    background-color: var(--color-red) !important;
+}
+
+.bg-green {
+    background-color: var(--color-green) !important;
+}
+
+.bg-red:hover {
+    background-color: var(--color-red) !important;
+}
+
+.bg-green:hover {
+    background-color: var(--color-green) !important;
+}
