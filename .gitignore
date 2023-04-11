@@ -13,6 +13,7 @@ Roboto.zip
 api/playerBansExample.json
 api/playerSummariesExample.json
 api/recentlyPlayedGamesExample.json
+api/inventoryScrapeExample.json
 
 # testing
 /coverage
