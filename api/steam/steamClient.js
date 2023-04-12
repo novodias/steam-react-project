@@ -1,10 +1,13 @@
 const ISteamUser = require('./interfaces/ISteamUser')
 const IPlayerService = require('./interfaces/IPlayerService')
+const Inventory = require('./scraper/Inventory')
 
 class SteamClient {
 
     steamUserInterface = new ISteamUser()
     steamPlayerInterface = new IPlayerService()
+
+    inventoryScrape = new Inventory()
 
     constructor(key) {
         this.base = 'api.steampowered.com'
@@ -120,6 +123,18 @@ class SteamClient {
         } catch (error) {
             throw error
         }
+    }
+
+    async getPlayerInventory(steamid, appid, count) {
+        const request = this.inventoryScrape.getUrl(
+            steamid,
+            appid,
+            this.inventoryScrape.languages.en,
+            count
+        )
+
+        const response = await this.getAsync(request)
+        return await response.json()
     }
 
     async getAsync(request) {

@@ -1,3 +1,4 @@
+const fs = require('fs').promises
 const express = require('express')
 const app = express()
 const port = Number.parseInt(process.env.SERVERPORT)
@@ -5,6 +6,7 @@ const cors = require('cors')
 app.use(cors())
 
 const SteamClient = require('./steam/steamClient')
+const Inventory = require('./steam/scraper/Inventory')
 const key = process.env.STEAMAPIKEY
 const client = new SteamClient(key)
 
@@ -40,7 +42,7 @@ app.get('/user/:steamid/recent', (req, res) => {
         //     return response.json()
         // })
         .then((data) => {
-            console.log(data)
+            // console.log(data)
             res.send(data)
         })
         .catch((reason) => {
@@ -57,6 +59,23 @@ app.get('/user/:steamid/bans', (req, res) => {
         .catch((reason) => {
             throw reason
         })
+})
+
+app.get('/user/:steamid/csgo-inventory', async (req, res) => {
+    
+    const buffer = await fs.readFile('./inventoryScrapeExample.json')
+    res.send(buffer.toString())
+
+    // const id = req.params.steamid
+
+    // client.getPlayerInventory(id, 730, 100)
+    //     .then((data) => {
+    //         res.send(data)
+    //     })
+    //     .catch((reason) => {
+    //         console.log(reason)
+    //         throw reason
+    //     })
 })
 
 app.listen(port, () => {
