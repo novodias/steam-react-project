@@ -46,14 +46,16 @@ export default class Inventory extends Component {
     }
 
     render() {
-        const inventory = this.props.inventory
+        const user = this.props.inventory
         
-        if (inventory.success === 1) {
+        console.log(user)
+
+        if (user && (user.public || user.inventory || user.descriptions)) {
             return (
                 <Container>
                     <h1>CSGO Inventory</h1>
                     <hr />
-                    {this.createGrid(inventory)}
+                    {this.createGrid(user.inventory)}
                 </Container>
             )
         } else {

@@ -32,18 +32,18 @@ export default class Main extends Component {
 
         fetch(this.state.address)
             .catch(() => this.setState({ address: 'http://192.168.0.9:3001/' }))
-            .finally(() => {
-                fetch(`${this.state.address}user/0/csgo-inventory`)
-                    .then(data => {
-                        return data.json()
-                    })
-                    .then(inventory => {
-                        this.setState({playerInventory: (<Inventory inventory={inventory} onCellClick={this.showItemInformation} />)})
-                    })
-                    .catch(reason => {
-                        console.log(reason)
-                    })
-        })
+        //     .finally(() => {
+        //         fetch(`${this.state.address}user/0/csgo-inventory`)
+        //             .then(data => {
+        //                 return data.json()
+        //             })
+        //             .then(inventory => {
+        //                 this.setState({playerInventory: (<Inventory inventory={inventory} onCellClick={this.showItemInformation} />)})
+        //             })
+        //             .catch(reason => {
+        //                 console.log(reason)
+        //             })
+        // })
         
     }
 
@@ -83,10 +83,9 @@ export default class Main extends Component {
             .then(data => {
                 return data.json()
             })
-            .then(inventory => {
-                console.log(inventory)
+            .then(user => {
                 this.setState({
-                    playerInventory: (<Inventory inventory={inventory}
+                    playerInventory: (<Inventory inventory={user}
                         onCellClick={this.showItemInformation} />)
                 })
             })
@@ -95,10 +94,10 @@ export default class Main extends Component {
             })
     }
 
-    createButtonToGetCSGOInventory() {
+    createButtonToGetCSGOInventory(data) {
         return (
             <Container>
-                <Button label={`Get ${this.state.steamUser.personaname} CSGO inventory`}
+                <Button label={`Get ${data.personaname} CSGO inventory`}
                     onClick={this.getCSGOInventory}
                     extraClasses='btn-csgo'/>
             </Container>
@@ -150,7 +149,8 @@ export default class Main extends Component {
 
                 await this.setState({
                     steamUser: data,
-                    playerProfile: this.createPlayerProfile(data)
+                    playerProfile: this.createPlayerProfile(data),
+                    playerInventory: this.createButtonToGetCSGOInventory(data)
                 })
 
                 return data.steamid
@@ -172,8 +172,7 @@ export default class Main extends Component {
                 // console.log(data)
                 if (data.games !== undefined) {
                     this.setState({
-                        gamesList: this.createGamesList(data.games),
-                        playerInventory: this.createButtonToGetCSGOInventory()
+                        gamesList: this.createGamesList(data.games)
                     })
                     return
                 }

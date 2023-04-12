@@ -53,9 +53,18 @@ export default class PlayerProfile extends Component {
     }
 
     getDate(unixTimestamp) {
-        const date = new Date(unixTimestamp * 1000)
-
-        const iso = date.toISOString().split('T')
+        if (!unixTimestamp) {
+            return null
+        }
+        
+        let date
+        if (typeof unixTimestamp === 'string') {
+            date = new Date(unixTimestamp).toISOString()
+        } else {
+            date = new Date(unixTimestamp * 1000).toISOString()
+        }
+        
+        const iso = date.split('T')
 
         const formattedDate = iso[0].toString().replaceAll('-', '/')
         const formattedTime = iso[1].split('.')[0]
@@ -66,6 +75,10 @@ export default class PlayerProfile extends Component {
     }
 
     createInfoBlock(name, value) {
+        if (!value) {
+            return null
+        }
+
         return (
             <div>
                 <span>{name}</span><strong>{value}</strong>
@@ -74,7 +87,9 @@ export default class PlayerProfile extends Component {
     }
 
     render() {
-        const player = new Player(this.props.player)
+        const player = this.props.player
+
+        console.log(player)
 
         return (
             <Container>
