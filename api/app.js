@@ -1,12 +1,12 @@
-const fs = require('fs').promises
+// const fs = require('fs').promises
 const express = require('express')
 const app = express()
 const port = Number.parseInt(process.env.SERVERPORT)
 const cors = require('cors')
 app.use(cors())
 
+// const Inventory = require('./steam/scraper/Inventory')
 const SteamClient = require('./steam/steamClient')
-const Inventory = require('./steam/scraper/Inventory')
 const key = process.env.STEAMAPIKEY
 const client = new SteamClient(key)
 
@@ -14,24 +14,70 @@ if (!port) {
     throw new Error('Port was not defined')
 }
 
+const SteamMongoDatabase = require('./database/mongoClient')
+const steamContext = new SteamMongoDatabase()
+steamContext.createCollections()
+// steamContext.run()
+
+function isNumeric(value) {
+    return /^\d+$/.test(value);
+}
+
 app.get('/', (req, res) => {
     res.send('Ok')
 })
 
-app.get('/user/:steamid', (req, res, next) => {
-    const id = req.params.steamid
-    client.getPlayerSummaries(id)
-        // .then((response) => {
-        //     return response.json()
-        // })
-        .then((data) => {
+app.get('/user/:steamid', async (req, res) => {
+    const get = async (id) => {
+        try {
+            const data = await client.getPlayerSummaries(id)
             res.send(data)
-        })
-        .catch((reason) => {
-            res.status(400).send({error: 'User not found'})
+            return data
+        } catch (error) {
+            console.log(error)
+            res.send({error: 'User not found'})
+        }
+    }
 
-            // next(reason)
-        })
+    const id = req.params.steamid
+    let result = null
+    let isvanity = !isNumeric(id)
+
+    if (isvanity) {
+        result = await steamContext.findOneUser(null, id)
+    } else {
+        if (id.toString().length !== 17) {
+            res.status(406).send({error: "SteamID is not valid"})
+            return
+        }
+        
+        result = await steamContext.findOneUser(id)
+    }
+
+    if (result !== null) {
+        console.log("[Database][SteamUsers] Found user " + result.steamid)
+        const time = Math.abs(new Date() - new Date(result.lastupdate)) / 60000
+        
+        if (time < 120) {
+            res.send(result)
+            return
+        }
+        
+        console.log(`[Database][SteamUsers] ${time} minutes finished, updating user: ${result.steamid}`)
+        const update = await get(id)
+        console.log(update)
+        await steamContext.updateUser(update, update.steamid)
+        return
+    }
+    
+    console.log("[Database][SteamUsers] User not found, requesting Steam API...")
+
+    try {
+        const user = await get(id)
+        await steamContext.insertUser(user)
+    } catch (error) {
+        console.log(error)
+    }
 })
 
 app.get('/user/:steamid/recent', (req, res) => {
@@ -63,19 +109,40 @@ app.get('/user/:steamid/bans', (req, res) => {
 
 app.get('/user/:steamid/csgo-inventory', async (req, res) => {
     
-    const buffer = await fs.readFile('./inventoryScrapeExample.json')
-    res.send(buffer.toString())
+    const steamid = req.params.steamid
 
-    // const id = req.params.steamid
+    if (steamid.toString().length !== 17) {
+        res.status(406).send({error: "SteamID is not valid"})
+        return
+    }
 
-    // client.getPlayerInventory(id, 730, 100)
-    //     .then((data) => {
-    //         res.send(data)
-    //     })
-    //     .catch((reason) => {
-    //         console.log(reason)
-    //         throw reason
-    //     })
+    const result = await steamContext.findOneInventory(steamid)
+
+    if (result !== null) {
+        console.log("[Database][SteamUsersInventory] Found user inventory " + result._id)
+        const time = Math.abs(new Date() - new Date(result.lastupdate)) / 60000
+
+        // 4 hours to update
+        if (time < 240) {
+            res.send(result)
+            return
+        }
+
+        console.log(`[Database][SteamUsersInventory] ${time} minutes finished, updating user inventory: ${result._id}`)
+        const update = await client.getPlayerInventory(steamid, 730, 5000)
+        await steamContext.updateInventory(update, steamid)
+        res.send(update)
+        return
+    }
+
+    console.log("[Database][SteamUsersInventory] User inventory not found, requesting Steam API...")
+    const userInv = await client.getPlayerInventory(steamid, 730, 5000)
+    await steamContext.insertInventory(userInv, steamid)
+    res.send(userInv)
+    
+    // TEST
+    // const buffer = await fs.readFile('./inventoryScrapeExample.json')
+    // res.send(buffer.toString())
 })
 
 app.listen(port, () => {

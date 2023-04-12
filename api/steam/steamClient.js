@@ -76,8 +76,13 @@ class SteamClient {
             if (data.response.success !== 1) {
                 throw Error('User was not found')
             }
+
+            const obj = {
+                steamid: data.response.steamid,
+                vanityurl: vanityUrl
+            }
     
-            return data.response.steamid
+            return obj
         } catch (error) {
             throw error
         }
@@ -90,18 +95,28 @@ class SteamClient {
             // Verifies if the steamId is a string or a number
             // let id = Number.parseInt(steamId)
             let id = steamId
+            let obj = null
             
             // Not a number, do an API call to get steamId
             // if (isNaN(id)) {
             //     id = await this.getSteamId(steamId)
             // }
             if (!this.isNumber(id)) {
-                id = await this.getSteamId(steamId)
+
+                // Returns an object with steamid and vanityurl
+                obj = await this.getSteamId(steamId)
+                id = obj.steamid
             }
 
             const response = await this.steamUserInterface.getPlayerSummaries(this, id)
             const json = await response.json()
-            return json.response.players[0]
+            const player = json.response.players[0]
+
+            if (obj !== null) {
+                player.vanityurl = obj.vanityurl
+            }
+
+            return player
         } catch (error) {
             throw error
         }
