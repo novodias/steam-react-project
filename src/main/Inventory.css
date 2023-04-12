@@ -1,0 +1,48 @@
+.items-grid-wrapper {
+    display: grid;
+    grid-template-columns: repeat(6, 96px);
+    /* grid-template-rows: repeat(5, 96px); */
+    column-gap: 7px;
+    row-gap: 5px;
+    padding: 5px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+
+    background-color: var(--transparent-black);
+}
+
+.item-cell {
+    display: flex;
+    width: 96px;
+    height: 96px;
+    background-color: var(--color-steam);
+    border-radius: 2px;
+    padding: 5px;
+    transition: all 0.2s ease-in-out;
+}
+
+.item-cell:hover {
+    background-color: var(--transparent-black);
+    cursor: pointer;
+}
+
+.item-cell:hover img {
+    transform: scale(1.2);
+}
+
+.item-cell:active {
+    background-color: #005ba1;
+}
+
+.item-cell img {
+    align-self: center;
+    max-width: 100%;
+    transition: all 0.2s ease-in;
+}
+
+.btn-csgo {
+    padding: 10px;
+    font-size: 1.4em;
+    width: 100%;
+}
