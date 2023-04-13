@@ -1,7 +1,6 @@
 .items-grid-wrapper {
     display: grid;
     grid-template-columns: repeat(6, 96px);
-    /* grid-template-rows: repeat(5, 96px); */
     column-gap: 7px;
     row-gap: 5px;
     padding: 5px;
@@ -10,6 +9,10 @@
     border-radius: 5px;
 
     background-color: var(--transparent-black);
+}
+
+.inventory-title {
+    margin-bottom: 20px;
 }
 
 .item-cell {
@@ -41,8 +44,49 @@
     transition: all 0.2s ease-in;
 }
 
+.item-cell span {
+    position: relative;
+    color: lightgray;
+    font-weight: bold;
+    font-size: 0.8em;
+    text-align: right;
+    min-width: 100%;
+    transform: translate(-100%, 0);
+}
+
 .btn-csgo {
     padding: 10px;
     font-size: 1.4em;
     width: 100%;
+}
+
+.buttons-inventory-wrapper {
+    /* vertical-align: middle;
+    text-align: right; */
+
+    display: flex;
+    align-items: center;
+    justify-content: right;
+    overflow: hidden;
+
+    height: 40px;
+}
+
+.buttons-inventory-wrapper .btn {
+    padding: 10px 12px;
+}
+
+.buttons-inventory-wrapper span {
+    height: 100%;
+    padding: 10px;
+    color: white;
+    background-color: var(--color-green);
+}
+
+.buttons-inventory-wrapper .btn:first-child {
+    margin-left: 0px;
+}
+
+.page-numbers-wrapper {
+    display: inline-block;
 }
