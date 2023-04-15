@@ -10,10 +10,9 @@ Roboto.zip
 */**/node_modules
 
 # ignore json examples
-api/playerBansExample.json
-api/playerSummariesExample.json
-api/recentlyPlayedGamesExample.json
-api/inventoryScrapeExample.json
+api/examples/*.json
+api/csharp/bin
+api/csharp/obj
 
 # testing
 /coverage

@@ -133,25 +133,37 @@ class SteamMongoDatabase {
     }
 
     _createUserObject(object) {
-        return {
-            _id: object.steamid,
-            vanityurl: object.vanityurl,
-            personaname: object.personaname,
-            personastate: object.personastate,
-            personastateflags: object.personastateflags,
-            profileurl: object.profileurl,
-            profilestate: object.profilestate,
-            commentpermission: object.commentpermission,
-            avatar: object.avatar,
-            avatarmedium: object.avatarmedium,
-            avatarfull: object.avatarfull,
-            avatarhash: object.avatarhash,
-            primaryclanid: object.primaryclanid,
-            communityvisibilitystate: object.communityvisibilitystate,
-            lastlogoff: this._createDate(object.lastlogoff),
-            timecreated: this._createDate(object.timecreated),
-            lastupdate: new Date().toISOString()
-        }
+
+        const target = {}
+        const value = Object.assign(target, object)
+
+        value._id = object.steamid
+        delete value.steamid
+
+        value.timecreated = this._createDate(value.timecreated)
+        value.lastupdate = new Date().toISOString()
+        
+        return value
+
+        // return {
+        //     _id: object.steamid,
+        //     vanityurl: object.vanityurl,
+        //     personaname: object.personaname,
+        //     personastate: object.personastate,
+        //     personastateflags: object.personastateflags,
+        //     profileurl: object.profileurl,
+        //     profilestate: object.profilestate,
+        //     commentpermission: object.commentpermission,
+        //     avatar: object.avatar,
+        //     avatarmedium: object.avatarmedium,
+        //     avatarfull: object.avatarfull,
+        //     avatarhash: object.avatarhash,
+        //     primaryclanid: object.primaryclanid,
+        //     communityvisibilitystate: object.communityvisibilitystate,
+        //     lastlogoff: this._createDate(object.lastlogoff),
+        //     timecreated: this._createDate(object.timecreated),
+        //     lastupdate: new Date().toISOString()
+        // }
     }
 
     _createInventoryObject(object, steamid) {
@@ -437,6 +449,8 @@ class SteamMongoDatabase {
 
         const query = { _id: steamid }
         const newvalues = { $set: this._createInventoryObject(object) }
+
+        delete newvalues.$set._id
 
         try {
             await this.client.connect()

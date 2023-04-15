@@ -65,7 +65,7 @@ app.get('/user/:steamid', async (req, res) => {
         
         console.log(`[Database][SteamUsers] ${time} minutes finished, updating user: ${result.steamid}`)
         const update = await get(id)
-        console.log(update)
+        // console.log(update)
         await steamContext.updateUser(update, update.steamid)
         return
     }
@@ -122,23 +122,28 @@ app.get('/user/:steamid/csgo-inventory', async (req, res) => {
         console.log("[Database][SteamUsersInventory] Found user inventory " + result._id)
         const time = Math.abs(new Date() - new Date(result.lastupdate)) / 60000
 
-        // 4 hours to update
-        if (time < 240) {
+        // 8 hours to update
+        if (time < 480) {
             res.send(result)
             return
         }
 
         console.log(`[Database][SteamUsersInventory] ${time} minutes finished, updating user inventory: ${result._id}`)
-        const update = await client.getPlayerInventory(steamid, 730, 5000)
-        await steamContext.updateInventory(update, steamid)
-        res.send(update)
+        try {
+            const update = await client.getPlayerInventory(steamid, 730, 5000)
+            await steamContext.updateInventory(update, steamid)
+            res.send(update)
+        } catch (error) {
+            throw error
+        }
+        
         return
     }
 
     console.log("[Database][SteamUsersInventory] User inventory not found, requesting Steam API...")
     const userInv = await client.getPlayerInventory(steamid, 730, 5000)
-    await steamContext.insertInventory(userInv, steamid)
-    res.send(userInv)
+    const insert = await steamContext.insertInventory(userInv, steamid)
+    res.send(insert)
     
     // TEST
     // const buffer = await fs.readFile('./inventoryScrapeExample.json')
