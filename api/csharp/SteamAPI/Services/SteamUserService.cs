@@ -12,7 +12,11 @@ public sealed class ISteamUserService : ServiceRequest
     }
 
     [MethodConfiguration("ResolveVanityUrl", "v0001")]
-    public async Task<VanityUrlResponse?> ResolveVanityUrlAsync(SteamClient client, string vanityUrl, string format = "json")
+    public async Task<VanityUrlResponse?> ResolveVanityUrlAsync(
+        SteamClient client, 
+        string vanityUrl, 
+        string format = "json",
+        CancellationToken token = default)
     {
         // var method = nameof(ResolveVanityUrl);
         // var version = "v0001";
@@ -27,11 +31,11 @@ public sealed class ISteamUserService : ServiceRequest
         var uri = CreateUri(path, query);
 
         // This looks dumb;
-        return await client.GetAsync<RootVanityUrl>(uri) as VanityUrlResponse;
+        return await client.GetAsync<RootVanityUrl>(uri, token) as VanityUrlResponse;
     }
 
     [MethodConfiguration("GetPlayerSummaries", "v0002")]
-    public async Task<IReadOnlyList<SteamUser>?> GetPlayerSummariesAsync(
+    public async Task<IList<SteamUser>?> GetPlayerSummariesAsync(
         SteamClient client,
         string steamIds,
         string format = "json",
@@ -51,7 +55,7 @@ public sealed class ISteamUserService : ServiceRequest
 
         var instance = await client.GetAsync<RootSteamUsersSummaries>(uri, token);
 
-        return instance as IReadOnlyList<SteamUser>;
+        return instance as IList<SteamUser>;
     }
 
     [MethodConfiguration("GetPlayerBans", "v0001")]

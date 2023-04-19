@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using SteamReactProject.SteamAPI.Services;
 
@@ -5,8 +7,14 @@ namespace SteamReactProject.SteamAPI.Entities;
 
 public class SteamUser
 {
-    [JsonConstructor]
+    public SteamUser()
+    {
+        
+    }
+
+    [Newtonsoft.Json.JsonConstructor]
     public SteamUser(
+    #region Public Data Parameters
         [JsonProperty("steamid")] string steamid,
         [JsonProperty("communityvisibilitystate")] int communityvisibilitystate,
         [JsonProperty("profilestate")] int profilestate,
@@ -19,12 +27,24 @@ public class SteamUser
         [JsonProperty("avatarhash")] string avatarhash,
         [JsonProperty("lastlogoff")] int lastlogoff,
         [JsonProperty("personastate")] int personastate,
-        [JsonProperty("primaryclanid")] string primaryclanid,
-        [JsonProperty("timecreated")] int timecreated,
-        [JsonProperty("personastateflags")] int personastateflags
+        [JsonProperty("personastateflags")] int personastateflags,
+    #endregion
+
+    #region Private Data Parameters
+        [JsonProperty("realname")] string? realname,
+        [JsonProperty("primaryclanid")] string? primaryclanid,
+        [JsonProperty("timecreated")] long? timecreated,
+        [JsonProperty("gameid")] int? gameid,
+        [JsonProperty("gameserverip")] string? gameserverip,
+        [JsonProperty("gameextrainfo")] string? gameextrainfo,
+        [JsonProperty("cityid")] string? cityid,
+        [JsonProperty("loccountrycode")] string? loccountrycode,
+        [JsonProperty("locstatecode")] string? locstatecode,
+        [JsonProperty("loccityid")] string? loccityid
+    #endregion
     )
     {
-        SteamId = steamid;
+        SteamId = ulong.Parse(steamid);
         CommunityVisibilityState = communityvisibilitystate;
         ProfileState = profilestate;
         PersonaName = personaname;
@@ -36,55 +56,129 @@ public class SteamUser
         AvatarHash = avatarhash;
         LastLogoff = lastlogoff;
         PersonaState = personastate;
+        PersonaStateFlags = personastateflags;
+
+        RealName = realname;
         PrimaryClanId = primaryclanid;
         TimeCreated = timecreated;
-        PersonaStateFlags = personastateflags;
+        GameID = gameid;
+        GameServerIP = gameserverip;
+        GameExtraInfo = gameextrainfo;
+        CityID = cityid;
+        LocationCountryCode = loccountrycode;
+        LocationStateCode = locstatecode;
+        LocationCityID = loccityid;
     }
 
-    [JsonProperty("steamid")]
-    public string SteamId { get; }
+    public static SteamUser operator +(SteamUser oldEntity, SteamUser newEntity)
+    {
+        oldEntity.SteamId = newEntity.SteamId;
+        oldEntity.CommunityVisibilityState = newEntity.CommunityVisibilityState;
+        oldEntity.ProfileState = newEntity.ProfileState;
+        oldEntity.PersonaName = newEntity.PersonaName;
+        oldEntity.CommentPermission = newEntity.CommentPermission;
+        oldEntity.ProfileUrl = newEntity.ProfileUrl;
+        oldEntity.Avatar = newEntity.Avatar;
+        oldEntity.AvatarMedium = newEntity.AvatarMedium;
+        oldEntity.AvatarFull = newEntity.AvatarFull;
+        oldEntity.AvatarHash = newEntity.AvatarHash;
+        oldEntity.LastLogoff = newEntity.LastLogoff;
+        oldEntity.PersonaState = newEntity.PersonaState;
+        oldEntity.PersonaStateFlags = newEntity.PersonaStateFlags;
+        oldEntity.RealName = newEntity.RealName;
+        oldEntity.PrimaryClanId = newEntity.PrimaryClanId;
+        oldEntity.TimeCreated = newEntity.TimeCreated;
+        oldEntity.GameID = newEntity.GameID;
+        oldEntity.GameServerIP = newEntity.GameServerIP;
+        oldEntity.GameExtraInfo = newEntity.GameExtraInfo;
+        oldEntity.CityID = newEntity.CityID;
+        oldEntity.LocationCountryCode = newEntity.LocationCountryCode;
+        oldEntity.LocationStateCode = newEntity.LocationStateCode;
+        oldEntity.LocationCityID = newEntity.LocationCityID;
 
-    [JsonProperty("communityvisibilitystate")]
-    public int CommunityVisibilityState { get; }
+        return oldEntity;
+    }
 
-    [JsonProperty("profilestate")]
-    public int ProfileState { get; }
+    #region Public Data
 
-    [JsonProperty("personaname")]
-    public string PersonaName { get; }
+    [JsonProperty("steamid"), JsonPropertyName("steamid"), Key]
+    public ulong SteamId { get; set; }
 
-    [JsonProperty("commentpermission")]
-    public int CommentPermission { get; }
+    [JsonProperty("personaname"), JsonPropertyName("personaname")]
+    public string PersonaName { get; set; }
 
-    [JsonProperty("profileurl")]
-    public string ProfileUrl { get; }
+    [JsonProperty("profileurl"), JsonPropertyName("profileurl")]
+    public string ProfileUrl { get; set; }
 
-    [JsonProperty("avatar")]
-    public string Avatar { get; }
+    [JsonProperty("communityvisibilitystate"), JsonPropertyName("communityvisibilitystate")]
+    public int CommunityVisibilityState { get; set; }
 
-    [JsonProperty("avatarmedium")]
-    public string AvatarMedium { get; }
+    [JsonProperty("profilestate"), JsonPropertyName("profilestate")]
+    public int ProfileState { get; set; }
 
-    [JsonProperty("avatarfull")]
-    public string AvatarFull { get; }
+    [JsonProperty("commentpermission"), JsonPropertyName("commentpermission")]
+    public int CommentPermission { get; set; }
 
-    [JsonProperty("avatarhash")]
-    public string AvatarHash { get; }
+    [JsonProperty("avatar"), JsonPropertyName("avatar")]
+    public string Avatar { get; set; }
 
-    [JsonProperty("lastlogoff")]
-    public int LastLogoff { get; }
+    [JsonProperty("avatarmedium"), JsonPropertyName("avatarmedium")]
+    public string AvatarMedium { get; set; }
 
-    [JsonProperty("personastate")]
-    public int PersonaState { get; }
+    [JsonProperty("avatarfull"), JsonPropertyName("avatarfull")]
+    public string AvatarFull { get; set; }
 
-    [JsonProperty("primaryclanid")]
-    public string PrimaryClanId { get; }
+    [JsonProperty("avatarhash"), JsonPropertyName("avatarhash")]
+    public string AvatarHash { get; set; }
 
-    [JsonProperty("timecreated")]
-    public int TimeCreated { get; }
+    [JsonProperty("lastlogoff"), JsonPropertyName("lastlogoff")]
+    public int LastLogoff { get; set; }
 
-    [JsonProperty("personastateflags")]
-    public int PersonaStateFlags { get; }
+    [JsonProperty("personastate"), JsonPropertyName("personastate")]
+    public int PersonaState { get; set; }
+
+
+    [JsonProperty("personastateflags"), JsonPropertyName("personastateflags")]
+    public int PersonaStateFlags { get; set; }
+
+    #endregion
+
+    #region Private Data
+
+    [JsonProperty("realname", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("realname")] 
+    public string? RealName { get; set; }
+    
+    [JsonProperty("primaryclanid", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("primaryclanid")] 
+    public string? PrimaryClanId { get; set; }
+    
+    [JsonProperty("timecreated", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("timecreated")] 
+    public long? TimeCreated { get; set; }
+    
+    [JsonProperty("gameid", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("gameid")] 
+    public int? GameID { get; set; }
+    
+    [JsonProperty("gameserverip", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("gameserverip")] 
+    public string? GameServerIP { get; set; }
+    
+    [JsonProperty("gameextrainfo", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("gameextrainfo")] 
+    public string? GameExtraInfo { get; set; }
+    
+    [JsonProperty("cityid", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("cityid")] 
+    public string? CityID { get; set; }
+    
+    [JsonProperty("loccountrycode", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("loccountrycode")] 
+    public string? LocationCountryCode { get; set; }
+    
+    [JsonProperty("locstatecode", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("locstatecode")] 
+    public string? LocationStateCode { get; set; }
+    
+    [JsonProperty("loccityid", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("loccityid")] 
+    public string? LocationCityID { get; set; }
+
+    #endregion
+
+    [JsonProperty("lastupdate", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("lastupdate")]
+    public DateTime? LastUpdate { get; set; }
 
     public object? Deserialize(string json)
     {
@@ -95,7 +189,7 @@ public class SteamUser
 
 public class SteamUsersSummaries
 {
-    [JsonConstructor]
+    [Newtonsoft.Json.JsonConstructor]
     public SteamUsersSummaries(
         [JsonProperty("players")] List<SteamUser> players
     )
@@ -103,13 +197,13 @@ public class SteamUsersSummaries
         Players = players;
     }
 
-    [JsonProperty("players")]
-    public IReadOnlyList<SteamUser>? Players { get; }
+    [JsonProperty("players"), JsonPropertyName("players")]
+    public IList<SteamUser>? Players { get; }
 }
 
 public class RootSteamUsersSummaries : IDeserialize
 {
-    [JsonConstructor]
+    [Newtonsoft.Json.JsonConstructor]
     public RootSteamUsersSummaries(
         [JsonProperty("response")] SteamUsersSummaries response
     )
@@ -117,7 +211,7 @@ public class RootSteamUsersSummaries : IDeserialize
         Response = response;
     }
 
-    [JsonProperty("response")]
+    [JsonProperty("response"), JsonPropertyName("response")]
     public SteamUsersSummaries Response { get; }
 
     public static object? Deserialize(string json)

@@ -26,7 +26,7 @@ public class VanityUrlResponse
 {
     public VanityUrlResponse(
         [JsonProperty("success")] int success,
-        [JsonProperty("steamid")] string? steamid,
+        [JsonProperty("steamid")] ulong? steamid,
         [JsonProperty("message")] string? message
     )
     {
@@ -41,7 +41,7 @@ public class VanityUrlResponse
     public bool Success => _success == 1;
 
     [JsonProperty("steamid")] 
-    public string? SteamId { get; }
+    public ulong? SteamId { get; }
 
     [JsonProperty("message")]
     public string? Message { get; }

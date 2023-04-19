@@ -25,25 +25,25 @@ public class SteamUserStatus
         EconomyBan = economyBan;
     }
 
-    [JsonProperty(nameof(SteamId))]
+    [JsonProperty("steamid")]
     public string SteamId { get; }
 
-    [JsonProperty(nameof(CommunityBanned))]
+    [JsonProperty("community_banned")]
     public bool CommunityBanned { get; }
 
-    [JsonProperty(nameof(VACBanned))]
+    [JsonProperty("vac_banned")]
     public bool VACBanned { get; }
 
-    [JsonProperty("NumberOfVACBans")]
+    [JsonProperty("number_of_vac_bans")]
     public int VACBans { get; }
 
-    [JsonProperty("DaysSinceLastBan")]
+    [JsonProperty("days_since_last_ban")]
     public int LastBan { get; }
 
-    [JsonProperty("NumberOfGameBans")]
+    [JsonProperty("number_of_game_bans")]
     public int GameBans { get; }
 
-    [JsonProperty(nameof(EconomyBan))]
+    [JsonProperty("economy_ban")]
     public string EconomyBan { get; }
 
     public static IReadOnlyList<SteamUserStatus>? Deserialize(string json)

@@ -1,20 +1,21 @@
-using System.Reflection;
 using SteamReactProject.SteamAPI.Services;
 using SteamReactProject.SteamAPI.Entities;
+using SteamReactProject.SteamAPI.Scrapers;
 
 namespace SteamReactProject.SteamAPI;
 
 public sealed class SteamClient
 {
     private readonly EventId _id = new(1, "SteamClient");
-    private readonly ILogger? _logger;
-    private readonly HttpClient _client;
-    private readonly string _key;
+    private ILogger? _logger;
+    private HttpClient? _client;
+    private string? _key;
 
     private readonly ISteamUserService SteamUserInterface = new("api.steampowered.com");
+    private readonly InventoryScraper InventoryScraper = new();
 
     // Not sure about this property;
-    public string Key { get => _key; }
+    public string Key { get => _key ?? ""; }
 
     public SteamClient(string key, ILogger? logger = null) 
     {
@@ -57,7 +58,11 @@ public sealed class SteamClient
 
     public async Task<object?> GetAsync<T>(Uri uri, CancellationToken token = default) where T : IDeserialize
     {
+        if (_client is null)
+            throw new NullReferenceException(nameof(_client));
+
         _logger?.LogInformation(_id, "Sending a request to: {AbsolutePath}", uri.AbsolutePath);
+        _logger?.LogDebug(_id, "Sending a request to: {AbsoluteUri}", uri.AbsoluteUri);
         
         try
         {
@@ -76,10 +81,12 @@ public sealed class SteamClient
             if (e is HttpRequestException requestException)
             {
                 _logger?.LogError(_id, requestException, "Request was not successful");
+                throw;
             }
             else if (e is TaskCanceledException taskCanceledException)
             {
                 _logger?.LogError(_id, taskCanceledException, "Task was canceled");
+                throw;
             }
             else
             {
@@ -90,17 +97,34 @@ public sealed class SteamClient
         return default;
     }
 
+    public async Task<VanityUrlResponse?> ResolveVanityUrl(
+        string name,
+        FormatExtension formatExtension = FormatExtension.JSON,
+        CancellationToken token = default
+    )
+    {
+        var format = ConvertFormatExtension(formatExtension);
+
+        var vanity = await SteamUserInterface.ResolveVanityUrlAsync(this, name, format, token);
+
+        if (vanity is null)
+        {
+            return null;
+        }
+
+        return vanity;
+    }
+
     public async Task<SteamUser?> GetPlayerSummariesAsync(
-        string steamId, 
+        ulong steamId, 
         FormatExtension formatExtension = FormatExtension.JSON, 
         CancellationToken token = default
     )
     {
-        var format = ConvertFormatExtension(formatExtension) ?? 
-            throw new Exception("Format or Steam IDs is null");
+        var format = ConvertFormatExtension(formatExtension);
 
         var players = await SteamUserInterface
-            .GetPlayerSummariesAsync(this, steamId, format, token);
+            .GetPlayerSummariesAsync(this, steamId.ToString(), format, token);
 
         if (players is null)
         {
@@ -110,7 +134,7 @@ public sealed class SteamClient
         return players[0];
     }
 
-    public async Task<IReadOnlyList<SteamUser>?> GetPlayersSummariesAsync(
+    public async Task<IList<SteamUser>?> GetPlayersSummariesAsync(
         IEnumerable<string> steamIds, 
         FormatExtension formatExtension = FormatExtension.JSON, 
         CancellationToken token = default
@@ -144,5 +168,16 @@ public sealed class SteamClient
 
         return await SteamUserInterface
             .GetPlayerBansAsync(this, ids, format, token);
+    }
+
+    public async Task<Inventory?> GetInventoryAsync(ulong steamId, int appId, int count = 5000, string language = "english", CancellationToken token = default)
+        => await InventoryScraper.GetInventoryAsync(this, steamId, appId, count, language, token);
+
+    public void Dispose()
+    {
+        _client?.Dispose();
+        _client = null;
+        _logger = null;
+        _key = null;
     }
 }
