@@ -18,3 +18,10 @@
 .container {
     animation: 1s ease fadeIn;
 }
+
+.container .loading-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

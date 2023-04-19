@@ -16,7 +16,7 @@ export default class Main extends Component {
 
         this.state = {
             steamUser: null,
-            address: 'http://25.4.109.76:3001/',
+            address: 'http://25.4.109.76:3001',
             playerProfile: null,
             playerBans: null,
             gamesList: null,
@@ -31,20 +31,7 @@ export default class Main extends Component {
         this.closeItemInformation = this.closeItemInformation.bind(this)
 
         fetch(this.state.address)
-            .catch(() => this.setState({ address: 'http://192.168.0.9:3001/' }))
-        //     .finally(() => {
-        //         fetch(`${this.state.address}user/0/csgo-inventory`)
-        //             .then(data => {
-        //                 return data.json()
-        //             })
-        //             .then(inventory => {
-        //                 this.setState({playerInventory: (<Inventory inventory={inventory} onCellClick={this.showItemInformation} />)})
-        //             })
-        //             .catch(reason => {
-        //                 console.log(reason)
-        //             })
-        // })
-        
+            .catch(() => this.setState({ address: 'http://192.168.0.9:3001' }))
     }
 
     showErrorMessage(message) {
@@ -79,7 +66,7 @@ export default class Main extends Component {
     }
 
     getCSGOInventory() {
-        fetch(`${this.state.address}user/${this.state.steamUser.steamid}/csgo-inventory`)
+        fetch(`${this.state.address}/user/${this.state.steamUser.steamid}/csgo-inventory`)
             .then(data => {
                 return data.json()
             })
@@ -104,25 +91,24 @@ export default class Main extends Component {
         )
     }
 
-    createPlayerProfile(data) {
-        return (
-            <PlayerProfile player={data} />
-        )
+    async fetchJsonAsync(url, init = undefined)
+    {
+        try {
+            const response = await fetch(url, init)
+            const data = response.json();
+
+            if (data.error)
+            {
+                throw data.error    
+            }
+
+            return data;
+        } catch (error) {
+            throw error
+        }
     }
 
-    createPlayerBans(data) {
-        return (
-            <PlayerBans bans={data} />
-        )
-    }
-
-    createGamesList(data) {
-        return (
-            <GamesList games={data} />
-        )
-    }
-
-    handleOnEnterPressed(text) {        
+    async handleOnEnterPressed(text) {        
         if (text.length === 0) {
             this.showErrorMessage('The input is empty')
             return
@@ -133,62 +119,100 @@ export default class Main extends Component {
             return
         }
 
-        this.setState({
-            playerProfile: null,
-            playerBans: null,
-            gamesList: null,
-            playerInventory: null
-        })
+        const container = <Container loading />
 
-        fetch(`${this.state.address}user/${text}`)
-            .then(res => res.json())
-            .then(async (data) => {
-                if (data.error) {
-                    throw new Error(data.error)
-                }
-
-                await this.setState({
-                    steamUser: data,
-                    playerProfile: this.createPlayerProfile(data),
-                    playerInventory: this.createButtonToGetCSGOInventory(data)
-                })
-
-                return data.steamid
+        try {
+            await this.setState({
+                playerProfile: container,
+                playerBans: container,
+                gamesList: container,
+                playerInventory: container
             })
-            .then(async (steamid) => {
-                const response = await fetch(`${this.state.address}user/${steamid}/bans`)
-                const data = await response.json()
 
+            const data = await this.fetchJsonAsync(`${this.state.address}/user/${text}`)
+            await this.setState({
+                steamUser: data,
+                playerProfile: <PlayerProfile player={data} />,
+                playerInventory: this.createButtonToGetCSGOInventory(data)
+            })
+
+            const bans = await this.fetchJsonAsync(`${this.state.address}/user/${data.steamid}/bans`)
+            await this.setState({
+                playerBans: <PlayerBans bans={bans}/>
+            })
+
+            const gamesList = await this.fetchJsonAsync(`${this.state.address}/user/${data.steamid}/recent`)
+            if (gamesList.games !== undefined) {
                 this.setState({
-                    playerBans: this.createPlayerBans(data)
+                    gamesList: <GamesList games={gamesList} />
                 })
-
-                return steamid
+                return
+            }
+        } catch (error) {
+            console.log(error)
+            this.showErrorMessage(`${error}`)
+            this.setState({
+                playerProfile: null,
+                playerBans: null,
+                gamesList: null,
+                playerInventory: null
             })
-            .then(async (steamid) => {
-                const response = await fetch(`${this.state.address}user/${steamid}/recent`)
-                const data = await response.json()
+        }
 
-                // console.log(data)
-                if (data.games !== undefined) {
-                    this.setState({
-                        gamesList: this.createGamesList(data.games)
-                    })
-                    return
-                }
+        // fetch(`${this.state.address}user/${text}`)
+        //     .then(res => res.json())
+        //     .then(async (data) => {
+        //         if (data.error) {
+        //             throw new Error(data.error)
+        //         }
 
-            })
-            .catch((reason) => {
-                // this.showErrorMessage(reason)
-                console.log(reason)
-                this.showErrorMessage(`${reason}`)
-            })
+        //         await this.setState({
+        //             steamUser: data,
+        //             playerProfile: <PlayerProfile player={data} />,
+        //             playerInventory: this.createButtonToGetCSGOInventory(data)
+        //         })
+
+        //         return data.steamid
+        //     })
+        //     .then(async (steamid) => {
+        //         const response = await fetch(`${this.state.address}user/${steamid}/bans`)
+        //         const data = await response.json()
+
+        //         this.setState({
+        //             playerBans: <PlayerBans bans={data} />
+        //         })
+
+        //         return steamid
+        //     })
+        //     .then(async (steamid) => {
+        //         const response = await fetch(`${this.state.address}user/${steamid}/recent`)
+        //         const data = await response.json()
+
+        //         // console.log(data)
+        //         if (data.games !== undefined) {
+        //             this.setState({
+        //                 gamesList: <GamesList games={data} />
+        //             })
+        //             return
+        //         }
+
+        //     })
+        //     .catch((reason) => {
+        //         console.log(reason)
+        //         this.showErrorMessage(`${reason}`)
+        //         this.setState({
+        //             playerProfile: null,
+        //             playerBans: null,
+        //             gamesList: null,
+        //             playerInventory: null
+        //         })
+        //     })
     }
     
     render() {
         return (
             <div>
-                <SteamFinder onEnter={this.handleOnEnterPressed}
+                <SteamFinder onEnter={async (e) => this.handleOnEnterPressed(e)}
                     error={this.state.errorComponent} />
                 {this.state.playerProfile}
                 {this.state.playerBans}
