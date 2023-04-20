@@ -1,3 +1,5 @@
+using SteamReactProject.Models;
+
 namespace SteamReactProject.Repositories;
 
 public class InventoriesRepository
@@ -13,27 +15,53 @@ public class InventoriesRepository
         _logger = logger;
     }
 
-    private static bool VerifyLastUpdate(DateTime lastUpdate, int minimumHours)
+    private bool VerifyLastUpdate(DateTime lastUpdate, int minimumHours)
     {
-        return DateTime.Now.Subtract(lastUpdate).TotalHours > minimumHours;
+        var sub = DateTime.UtcNow.Subtract(lastUpdate).TotalHours;
+        var result = sub > minimumHours;
+
+        _logger?.LogDebug("[CSGOInventory/VerifyLastUpdate] Last: {LastUpdate}, Now: {Now}, ResultTH: {sub}, bool: {Bool}",
+            lastUpdate.ToString(), DateTime.UtcNow, sub, result);
+
+        return result;
     }
 
     public async Task<CSGOInventory?> GetById(ulong id)
     {
         var result = await _context.FindInventoryAsync(id);
 
-        if (result is not null && !VerifyLastUpdate(result.LastUpdate!.Value, 12))
+        if (result is not default(CSGOInventory) && !VerifyLastUpdate(result.LastUpdate!.Value, 12))
         {
             _logger?.LogInformation("[CSGOInventory/{MethodName}] Found steam user inventory in database", nameof(GetById));
             return result;
         }
 
-        _logger?.LogInformation("[CSGOInventory/{MethodName}] Not found steam user inventory in database", nameof(GetById));
-        var updated = await _client.GetInventoryAsync(id, 730);
+        if (result is null)
+        {
+            _logger?.LogInformation("[CSGOInventory/{MethodName}] Not found steam user inventory in database", nameof(GetById));
+        }
+        else 
+        {
+            _logger?.LogInformation("[CSGOInventory/{MethodName}] CSGO Inventory entity not updated", nameof(GetById));
+        }
+
+        Inventory? updated;
+        try
+        {
+            updated = await _client.GetInventoryAsync(id, 730);
+        }
+        catch (Exception)
+        {
+            updated = null;
+        }
 
         if (updated is null) 
         {
-            return default;
+            // TODO: If database entity exists, send that instead.
+            _logger?.LogInformation("[CSGOInventory/{MethodName}] Request not successful - Sending local entity instead", nameof(GetById));
+            return result is not null ? result : default;
+
+            // return default;
         }
 
         result = await _context.AddOrUpdateAsync(updated, id);
