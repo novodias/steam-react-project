@@ -1,12 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
-using SteamReactProject.SteamAPI.Services;
 
 namespace SteamReactProject.SteamAPI.Entities;
 
 public class SteamUser
 {
+    // Get AccountID by subtracting SteamID with this number: 76561197960265728  
+
+    #pragma warning disable 8618
     public SteamUser()
     {
         
@@ -95,6 +97,7 @@ public class SteamUser
         oldEntity.LocationCountryCode = newEntity.LocationCountryCode;
         oldEntity.LocationStateCode = newEntity.LocationStateCode;
         oldEntity.LocationCityID = newEntity.LocationCityID;
+        oldEntity.LastUpdate = newEntity.LastUpdate;
 
         return oldEntity;
     }
