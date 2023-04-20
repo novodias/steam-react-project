@@ -1,13 +1,20 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
-using SteamReactProject.SteamAPI.Services;
 
 namespace SteamReactProject.SteamAPI.Entities;
 
 public class SteamUserStatus
 {
-    [JsonConstructor]
+    #pragma warning disable 8618
+    public SteamUserStatus()
+    {
+
+    }
+
+    [Newtonsoft.Json.JsonConstructor]
     public SteamUserStatus(
-        [JsonProperty(nameof(SteamId))] string steamId,
+        [JsonProperty("SteamId")] ulong steamId,
         [JsonProperty(nameof(CommunityBanned))] bool communityBanned,
         [JsonProperty(nameof(VACBanned))] bool vacBanned,
         [JsonProperty("NumberOfVACBans")] int numberOfVACBans,
@@ -16,7 +23,7 @@ public class SteamUserStatus
         [JsonProperty(nameof(EconomyBan))] string economyBan
     )
     {
-        SteamId = steamId;
+        SteamID = steamId;
         CommunityBanned = communityBanned;
         VACBanned = vacBanned;
         VACBans = numberOfVACBans;
@@ -25,26 +32,29 @@ public class SteamUserStatus
         EconomyBan = economyBan;
     }
 
-    [JsonProperty("steamid")]
-    public string SteamId { get; }
+    [JsonProperty("steamid"), JsonPropertyName("steamid"), Key]
+    public ulong SteamID { get; set; }
 
-    [JsonProperty("community_banned")]
-    public bool CommunityBanned { get; }
+    [JsonProperty("community_banned"), JsonPropertyName("community_banned")]
+    public bool CommunityBanned { get; set; }
 
-    [JsonProperty("vac_banned")]
-    public bool VACBanned { get; }
+    [JsonProperty("vac_banned"), JsonPropertyName("vac_banned")]
+    public bool VACBanned { get; set; }
 
-    [JsonProperty("number_of_vac_bans")]
-    public int VACBans { get; }
+    [JsonProperty("number_of_vac_bans"), JsonPropertyName("number_of_vac_bans")]
+    public int VACBans { get; set; }
 
-    [JsonProperty("days_since_last_ban")]
-    public int LastBan { get; }
+    [JsonProperty("days_since_last_ban"), JsonPropertyName("days_since_last_ban")]
+    public int LastBan { get; set; }
 
-    [JsonProperty("number_of_game_bans")]
-    public int GameBans { get; }
+    [JsonProperty("number_of_game_bans"), JsonPropertyName("number_of_game_bans")]
+    public int GameBans { get; set; }
 
-    [JsonProperty("economy_ban")]
-    public string EconomyBan { get; }
+    [JsonProperty("economy_ban"), JsonPropertyName("economy_ban")]
+    public string EconomyBan { get; set; }
+
+    [JsonProperty("lastupdate", NullValueHandling = NullValueHandling.Ignore), JsonPropertyName("lastupdate")]
+    public DateTime? LastUpdate { get; set; }
 
     public static IReadOnlyList<SteamUserStatus>? Deserialize(string json)
     {
@@ -55,7 +65,7 @@ public class SteamUserStatus
 
 public class RootSteamUserBanStatus : IDeserialize
 {
-    [JsonConstructor]
+    [Newtonsoft.Json.JsonConstructor]
     public RootSteamUserBanStatus(
         [JsonProperty("players")] List<SteamUserStatus> playersStatus
     )

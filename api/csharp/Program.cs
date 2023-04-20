@@ -49,16 +49,18 @@ var options = new JsonSerializerOptions()
 };
 
 var app = builder.Build();
-var client = app.Services.GetRequiredService<SteamClient>();
+// var client = app.Services.GetRequiredService<SteamClient>();
 
-app.MapGet("/steam/users", async ([FromServices] UsersRepository repo) =>
+app.MapGet("/steam/users", ([FromServices] UsersRepository repo) =>
 {
     return Results.Json(repo.GetAll(), options);
 });
 
-app.MapGet("/steam/users/{steamid}", async (HttpContext ctx, [FromServices] UsersRepository repo, string steamID) =>
+app.MapGet("/steam/user/{steamid}", async (HttpContext ctx, 
+                                [FromServices] UsersRepository repo, 
+                                string steamID) =>
 {
-    if (string.IsNullOrEmpty(steamID.ToString()))
+    if (string.IsNullOrEmpty(steamID))
     {
         return Results.BadRequest("SteamID not inserted");
     }
@@ -70,12 +72,12 @@ app.MapGet("/steam/users/{steamid}", async (HttpContext ctx, [FromServices] User
         return result is not null ? Results.Json(result, options) : Results.NotFound("Steam user not found");
     }
 
-    if (steamID.ToString().Length != 17)
+    if (steamID.Length != 17)
     {
         return Results.BadRequest("SteamID not valid");
     }
 
-    result = await repo.GetById(id);
+    result = await repo.GetUserById(id);
     return result is not null ? Results.Json(result, options) : Results.NotFound("Steam user not found");
 });
 
@@ -107,33 +109,46 @@ app.MapGet("/steam/csgo/{steamid}", async (HttpContext ctx, [FromServices] Inven
     }
 });
 
-app.MapGet("/steam/users/ban", async (ctx) =>
+app.MapGet("/steam/user/ban/{steamid}", async ([FromServices] UsersRepository repo, 
+                                                string steamID) =>
 {
-    var steamIds = ctx.Request.Query["steamids"].ToString();
-    
-    if (string.IsNullOrEmpty(steamIds))
+    if (string.IsNullOrEmpty(steamID))
     {
-        // ctx.Response.StatusCode = 400;
-        ctx.Response.StatusCode = StatusCodes.Status400BadRequest;
-        await ctx.Response.WriteAsync("SteamIDs not inserted");
-        return;
+        return Results.BadRequest("SteamID not inserted");
     }
 
-    var identifiers = steamIds.Split(',');
-    var client = app.Services.GetRequiredService<SteamClient>();
-    var status = await client.GetPlayersBansAsync(identifiers);
-
-    if (status is null)
+    object? result;
+    if (!ulong.TryParse(steamID, out var id))
     {
-        // ctx.Response.StatusCode = 404;
-        ctx.Response.StatusCode = StatusCodes.Status404NotFound;
-        await ctx.Response.WriteAsync("SteamID not found");
-        return;
+        result = await repo.GetByNameId(steamID);
+        return result is not null ? Results.Json(result, options) : Results.NotFound("Steam user not found");
     }
 
-    var serialized = JsonConvert.SerializeObject(status);
-    ctx.Response.ContentType = "application/json";
-    await ctx.Response.WriteAsync(serialized);
+    if (steamID.Length != 17)
+    {
+        return Results.BadRequest("SteamID not valid");
+    }
+
+    result = await repo.GetStatusById(id);
+    return result is not null ? Results.Json(result, options) : Results.NotFound("Steam user not found");
+});
+
+app.MapGet("/steam/user/recent/{steamid}", async (HttpContext ctx, 
+                                                [FromServices] SteamClient client, 
+                                                string steamID) =>
+{
+    if (string.IsNullOrEmpty(steamID))
+    {
+        return Results.BadRequest("SteamID not inserted");
+    }
+
+    if (!ulong.TryParse(steamID, out var id) && steamID.Length != 17)
+    {
+        return Results.BadRequest("SteamID not valid");
+    }
+
+    var result = await client.GetPlayerRecentGames(id, 5);
+    return result is not null ? Results.Json(result, options) : Results.NotFound("Steam user recent games not available");
 });
 
 app.Run($"http://localhost:{port}");

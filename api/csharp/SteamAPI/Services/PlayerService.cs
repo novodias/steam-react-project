@@ -5,9 +5,9 @@ namespace SteamReactProject.SteamAPI.Services;
 
 public class IPlayerService : ServiceRequest
 {
-    public IPlayerService(string baseAddress)
+    public IPlayerService()
     {
-        _base = baseAddress;
+        _base = "api.steampowered.com";
         _interface = "IPlayerService";
     }
 
@@ -15,7 +15,8 @@ public class IPlayerService : ServiceRequest
     public async Task<SteamUserGames?> GetRecentlyPlayedGamesAsync(
         SteamClient client, 
         string steamId, 
-        int count, 
+        int count,
+        string format = "json",
         CancellationToken token = default)
     {
         var serialized = SerializeAnonymousObject(
@@ -25,6 +26,7 @@ public class IPlayerService : ServiceRequest
         var path = CreatePath();
         var query = CreateQuery(
             new Query("key", client.Key),
+            new Query("format", format),
             new Query("input_json", serialized)
         );
         var uri = CreateUri(path, query);

@@ -1,13 +1,10 @@
-using SteamReactProject.SteamAPI.Attributes;
-using SteamReactProject.SteamAPI.Entities;
-
 namespace SteamReactProject.SteamAPI.Services;
 
 public sealed class ISteamUserService : ServiceRequest
 {
-    public ISteamUserService(string baseAddress)
+    public ISteamUserService()
     {
-        _base = baseAddress;
+        _base = "api.steampowered.com";
         _interface = "ISteamUser";
     }
 

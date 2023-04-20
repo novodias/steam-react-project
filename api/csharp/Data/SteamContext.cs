@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SteamReactProject.SteamAPI.Entities;
-using Newtonsoft.Json;
+using SteamReactProject.Models;
 
 namespace SteamReactProject.Data;
 
@@ -9,10 +8,12 @@ public class SteamContext : DbContext
     #pragma warning disable 8618
     public SteamContext(DbContextOptions<SteamContext> options) : base(options)
     {
-        Database.EnsureCreated();
+        // Database.Migrate();
+        // Database.EnsureCreated();
     }
 
     public DbSet<SteamUser> SteamUsers { get; set; }
+    public DbSet<SteamUserStatus> SteamUserStatuses { get; set; }
     public DbSet<CSGOInventory> CSGOUserInventories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -25,6 +26,9 @@ public class SteamContext : DbContext
 
     public async Task<SteamUser?> FindUserAsync(ulong id)
         => await SteamUsers.FindAsync(id);
+
+    public async Task<SteamUserStatus?> FindStatusAsync(ulong id)
+        => await SteamUserStatuses.FindAsync(id);
 
     public async Task<CSGOInventory?> FindInventoryAsync(ulong id)
         => await CSGOUserInventories.FindAsync(id);
@@ -47,6 +51,30 @@ public class SteamContext : DbContext
         else 
         {
             local += entity;
+        }
+
+        await SaveChangesAsync();
+        return local;
+    }
+
+    public async Task<SteamUserStatus> AddOrUpdateAsync(SteamUserStatus entity)
+    {
+        if (entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity));
+        }
+
+        entity.LastUpdate = DateTime.UtcNow;
+
+        var local = await SteamUserStatuses.FindAsync(entity.SteamID);
+
+        if (local == null)
+        {
+            local = (await SteamUserStatuses.AddAsync(entity)).Entity;
+        } 
+        else 
+        {
+            local = entity;
         }
 
         await SaveChangesAsync();
@@ -87,7 +115,7 @@ public class SteamContext : DbContext
             throw new ArgumentNullException(nameof(entities));
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
         foreach (var entity in entities)
         {
             entity.LastUpdate = now;

@@ -13,9 +13,15 @@ public class UsersRepository
         _logger = logger;
     }
 
-    private static bool VerifyLastUpdate(DateTime lastUpdate, int minimumHours)
+    private bool VerifyLastUpdate(DateTime lastUpdate, int minimumHours)
     {
-        return DateTime.Now.Subtract(lastUpdate).TotalHours > minimumHours;
+        var sub = DateTime.UtcNow.Subtract(lastUpdate).TotalHours;
+        var result = sub > minimumHours;
+
+        _logger?.LogDebug("[CSGOInventory/VerifyLastUpdate] Last: {LastUpdate}, Now: {Now}, ResultTH: {sub}, bool: {Bool}",
+            lastUpdate.ToString(), DateTime.UtcNow, sub, result);
+
+        return result;
     }
 
     private bool IsVanityUrlEqualTo(SteamUser s, string name)
@@ -45,7 +51,10 @@ public class UsersRepository
 
         var result = collection.FirstOrDefault(s => IsVanityUrlEqualTo(s, name));
 
-        if (result is not null && !VerifyLastUpdate(result.LastUpdate!.Value, 5))
+        _logger?.LogDebug("[UsersRepository/{MethodName}] {Name} result is not default [{Bool}]",
+            nameof(GetByNameId), name, result is not default(SteamUser));
+
+        if (result is not default(SteamUser) && !VerifyLastUpdate(result.LastUpdate!.Value, 5))
         {
             _logger?.LogInformation("[SteamUsers/{MethodName}] Found steam user in database", nameof(GetByNameId));
             return result;
@@ -65,24 +74,47 @@ public class UsersRepository
         }
 
         // We try again
-        result = await GetById(vanity.SteamId!.Value);
+        result = await GetUserById(vanity.SteamId!.Value);
         return result;
     }
 
-    public async Task<SteamUser?> GetById(ulong id)
+    public async Task<SteamUser?> GetUserById(ulong id)
     {
-        // var result = await _context.FindAsync<SteamUser>(id);
         var result = await _context.FindUserAsync(id);
 
-        if (result is not null && !VerifyLastUpdate(result.LastUpdate!.Value, 5))
+        if (result is not default(SteamUser) && !VerifyLastUpdate(result.LastUpdate!.Value, 5))
         {
-            _logger?.LogInformation("[SteamUsers/{MethodName}] Found steam user in database", nameof(GetById));
+            _logger?.LogInformation("[SteamUsers/{MethodName}] Found steam user in database", nameof(GetUserById));
             return result;
         }
 
-        _logger?.LogInformation("[SteamUsers/{MethodName}] Not found steam user in database", nameof(GetById));
+        _logger?.LogInformation("[SteamUsers/{MethodName}] Not found steam user in database", nameof(GetUserById));
         var updated = await _client.GetPlayerSummariesAsync(id);
 
+        // TODO: If database entity exists, send that instead.
+        if (updated is null) 
+        {
+            return default;
+        }
+
+        updated = await _context.AddOrUpdateAsync(updated!);
+        return updated;
+    }
+
+    public async Task<SteamUserStatus?> GetStatusById(ulong id)
+    {
+        var result = await _context.FindStatusAsync(id);
+
+        if (result is not default(SteamUserStatus) && VerifyLastUpdate(result.LastUpdate!.Value, 5))
+        {
+            _logger?.LogInformation("[SteamUsers/{MethodName}] Found steam user in database", nameof(GetStatusById));
+            return result;
+        }
+
+        _logger?.LogInformation("[SteamUsers/{MethodName}] Not found steam user in database", nameof(GetStatusById));
+        var updated = await _client.GetPlayerBansAsync(id);
+
+        // TODO: If database entity exists, send that instead.
         if (updated is null) 
         {
             return default;
